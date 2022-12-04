@@ -24,7 +24,12 @@ package pascal.taie.analysis.dataflow.solver;
 
 import pascal.taie.analysis.dataflow.analysis.DataflowAnalysis;
 import pascal.taie.analysis.dataflow.fact.DataflowResult;
+import pascal.taie.analysis.dataflow.fact.SetFact;
 import pascal.taie.analysis.graph.cfg.CFG;
+import pascal.taie.ir.exp.Var;
+import pascal.taie.ir.stmt.Stmt;
+
+import java.util.*;
 
 class IterativeSolver<Node, Fact> extends Solver<Node, Fact> {
 
@@ -40,5 +45,49 @@ class IterativeSolver<Node, Fact> extends Solver<Node, Fact> {
     @Override
     protected void doSolveBackward(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         // TODO - finish me
+        boolean changeDetected = true;
+        Node exitNode = cfg.getExit();
+        Set<Node> precursor = cfg.getPredsOf(exitNode);
+
+
+
+
+        while(changeDetected){
+            changeDetected = false;
+            Set<Node> visited = new HashSet<>();
+
+            while(!precursor.isEmpty()){
+                Set<Node> newPrecursor = new HashSet<Node>() ;
+                for(Node node : precursor){
+                    visited.add(node);
+                    SetFact<Var> nodeOutFact = (SetFact<Var>)result.getOutFact(node);
+                    nodeOutFact.clear();
+                    for(Node nodeNext : cfg.getSuccsOf(node)){
+                        SetFact nodeOutNextInFact = (SetFact) result.getInFact(nodeNext);
+                        nodeOutFact.union(nodeOutNextInFact);
+
+
+                    }
+                    SetFact<Var> nodeInFact = (SetFact<Var>) result.getInFact(node);
+
+
+                    boolean isChanged = analysis.transferNode(node, (Fact) nodeInFact, (Fact) nodeOutFact);
+
+                    if(isChanged){
+                        changeDetected = true;
+                    }
+
+                    for(Node nodePre : cfg.getPredsOf(node)){
+                        if(!visited.contains(nodePre)){
+                            newPrecursor.add(nodePre);
+                        }
+
+                    }
+
+
+                }
+                precursor = newPrecursor;
+            }
+        }
     }
 }
