@@ -46,8 +46,6 @@ class IterativeSolver<Node, Fact> extends Solver<Node, Fact> {
     protected void doSolveBackward(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         // TODO - finish me
         boolean changeDetected = true;
-        Node exitNode = cfg.getExit();
-        Set<Node> precursor = cfg.getPredsOf(exitNode);
 
 
 
@@ -55,6 +53,8 @@ class IterativeSolver<Node, Fact> extends Solver<Node, Fact> {
         while(changeDetected){
             changeDetected = false;
             Set<Node> visited = new HashSet<>();
+            Node exitNode = cfg.getExit();
+            Set<Node> precursor = cfg.getPredsOf(exitNode);
 
             while(!precursor.isEmpty()){
                 Set<Node> newPrecursor = new HashSet<Node>() ;

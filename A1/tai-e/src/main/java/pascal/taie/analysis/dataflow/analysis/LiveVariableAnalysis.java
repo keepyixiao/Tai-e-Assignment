@@ -25,9 +25,11 @@ package pascal.taie.analysis.dataflow.analysis;
 import pascal.taie.analysis.dataflow.fact.SetFact;
 import pascal.taie.analysis.graph.cfg.CFG;
 import pascal.taie.config.AnalysisConfig;
+import pascal.taie.ir.exp.ArrayLengthExp;
 import pascal.taie.ir.exp.LValue;
 import pascal.taie.ir.exp.RValue;
 import pascal.taie.ir.exp.Var;
+import pascal.taie.ir.stmt.AssignStmt;
 import pascal.taie.ir.stmt.Stmt;
 
 import java.util.List;
@@ -94,6 +96,10 @@ public class LiveVariableAnalysis extends
             if(rValue instanceof Var){
 
                 in.add((Var)rValue);
+
+            }else if(rValue instanceof ArrayLengthExp){
+                Var rvalue =  ((ArrayLengthExp) rValue).getBase();
+                in.add(rvalue);
 
             }
 
