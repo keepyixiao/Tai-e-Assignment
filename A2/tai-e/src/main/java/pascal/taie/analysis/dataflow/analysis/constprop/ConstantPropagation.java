@@ -26,14 +26,7 @@ import pascal.taie.analysis.dataflow.analysis.AbstractDataflowAnalysis;
 import pascal.taie.analysis.graph.cfg.CFG;
 import pascal.taie.config.AnalysisConfig;
 import pascal.taie.ir.IR;
-import pascal.taie.ir.exp.ArithmeticExp;
-import pascal.taie.ir.exp.BinaryExp;
-import pascal.taie.ir.exp.BitwiseExp;
-import pascal.taie.ir.exp.ConditionExp;
-import pascal.taie.ir.exp.Exp;
-import pascal.taie.ir.exp.IntLiteral;
-import pascal.taie.ir.exp.ShiftExp;
-import pascal.taie.ir.exp.Var;
+import pascal.taie.ir.exp.*;
 import pascal.taie.ir.stmt.DefinitionStmt;
 import pascal.taie.ir.stmt.Stmt;
 import pascal.taie.language.type.PrimitiveType;
@@ -76,7 +69,24 @@ public class ConstantPropagation extends
      */
     public Value meetValue(Value v1, Value v2) {
         // TODO - finish me
-        return null;
+        if (v1.isConstant()) {
+            if (v2.isConstant()) {
+                int v1Num = v1.getConstant();
+                int v2Num = v2.getConstant();
+                if (v1Num == v2Num) {
+                    return Value.makeConstant(v1Num);
+                } else {
+                    return Value.getUndef();
+                }
+            } else if (v2.isUndef()) {
+                ///fixme , is that right?
+                return Value.getUndef();
+            }
+
+        } else if (v1.isNAC() || v2.isNAC()) {
+            return Value.getNAC();
+        }
+        return Value.getUndef();
     }
 
     @Override
@@ -112,6 +122,77 @@ public class ConstantPropagation extends
      */
     public static Value evaluate(Exp exp, CPFact in) {
         // TODO - finish me
-        return null;
+        if (exp instanceof ArithmeticExp) {
+            ArithmeticExp arithmeticExp = (ArithmeticExp) exp;
+            ArithmeticExp.Op operator = arithmeticExp.getOperator();
+            Var operand1 = arithmeticExp.getOperand1();
+            Var operand2 = arithmeticExp.getOperand2();
+            int result = 0;
+            if (operand1.isTempConst() && operand2.isTempConst()) {
+                Literal l1 = operand1.getTempConstValue();
+                Literal l2 = operand2.getTempConstValue();
+                IntLiteral intLiteral1 = (IntLiteral) l1;
+                IntLiteral intLiteral2 = (IntLiteral) l2;
+                if (operator.equals(ArithmeticExp.Op.ADD)) {
+                    result = intLiteral1.getValue() + intLiteral2.getValue();
+                } else if (operator.equals(ArithmeticExp.Op.SUB)) {
+                    result = intLiteral1.getValue() - intLiteral2.getValue();
+                } else if (operator.equals(ArithmeticExp.Op.MUL)) {
+                    result = intLiteral1.getValue() * intLiteral1.getValue();
+                } else if (operator.equals(ArithmeticExp.Op.DIV)) {
+                    result = intLiteral1.getValue() / intLiteral2.getValue();
+                } else if (operator.equals(ArithmeticExp.Op.REM)) {
+                    result = intLiteral1.getValue() % intLiteral2.getValue();
+                }
+                return Value.makeConstant(result);
+            }
+        } else if (exp instanceof ConditionExp) {
+            ConditionExp conditionExp = (ConditionExp) exp;
+        } else if (exp instanceof BitwiseExp) {
+            BitwiseExp bitwiseExp = (BitwiseExp) exp;
+            BitwiseExp.Op operator = bitwiseExp.getOperator();
+            Var operand1 = bitwiseExp.getOperand1();
+            Var operand2 = bitwiseExp.getOperand2();
+            int result = 0;
+            if (operand1.isTempConst() && operand2.isTempConst()) {
+                Literal l1 = operand1.getTempConstValue();
+                Literal l2 = operand2.getTempConstValue();
+                IntLiteral intLiteral1 = (IntLiteral) l1;
+                IntLiteral intLiteral2 = (IntLiteral) l2;
+
+                if (operator.equals(BitwiseExp.Op.AND)) {
+                    result = intLiteral1.getValue() & intLiteral2.getValue();
+                } else if (operator.equals(BitwiseExp.Op.OR)) {
+                    result = intLiteral1.getValue() | intLiteral2.getValue();
+                } else if (operator.equals(BitwiseExp.Op.XOR)) {
+                    result = intLiteral1.getValue() ^ intLiteral2.getValue();
+                }
+                return Value.makeConstant(result);
+            }
+        } else if (exp instanceof ShiftExp) {
+            ShiftExp shiftExp = (ShiftExp) exp;
+            Var operand1 = shiftExp.getOperand1();
+            Var operand2 = shiftExp.getOperand2();
+            ShiftExp.Op operator = shiftExp.getOperator();
+            int result = 0;
+
+            if (operand1.isTempConst() && operand2.isTempConst()) {
+                Literal l1 = operand1.getTempConstValue();
+                Literal l2 = operand2.getTempConstValue();
+                IntLiteral intLiteral1 = (IntLiteral) l1;
+                IntLiteral intLiteral2 = (IntLiteral) l2;
+
+                if (operator.equals(ShiftExp.Op.SHL)) {
+                    result = intLiteral1.getValue() << intLiteral1.getValue();
+                }else if(operator.equals(ShiftExp.Op.SHR)){
+                    result = intLiteral1.getValue() >> intLiteral1.getValue();
+                }else if(operator.equals(ShiftExp.Op.USHR)){
+                    result = intLiteral1.getValue() >>> intLiteral1.getValue();
+                }
+                return Value.makeConstant(result);
+            }
+
+        }
+        return Value.getNAC();
     }
 }
