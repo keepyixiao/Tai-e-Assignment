@@ -50,18 +50,36 @@ public class ConstantPropagation extends
     @Override
     public CPFact newBoundaryFact(CFG<Stmt> cfg) {
         // TODO - finish me
-        return null;
+        Stmt entryStmt = cfg.getEntry();
+        LValue entryLValue = entryStmt.getDef().get();
+        Var entryVar = (Var) entryLValue;
+        CPFact cpFact = new CPFact();
+        Value NACValue = Value.getNAC();
+        cpFact.update(entryVar, NACValue);
+
+        return cpFact;
     }
 
     @Override
     public CPFact newInitialFact() {
         // TODO - finish me
-        return null;
+        CPFact cpFact = new CPFact();
+
+        return cpFact;
     }
 
     @Override
     public void meetInto(CPFact fact, CPFact target) {
         // TODO - finish me
+        for (Var factVar : fact.keySet()) {
+            for (Var targetVar : target.keySet()) {
+                if (factVar.toString().equals(targetVar.toString())) {
+                    Value val = meetValue(fact.get(factVar), target.get(targetVar));
+                    fact.update(factVar, val);
+                }
+            }
+        }
+
     }
 
     /**
@@ -184,9 +202,9 @@ public class ConstantPropagation extends
 
                 if (operator.equals(ShiftExp.Op.SHL)) {
                     result = intLiteral1.getValue() << intLiteral1.getValue();
-                }else if(operator.equals(ShiftExp.Op.SHR)){
+                } else if (operator.equals(ShiftExp.Op.SHR)) {
                     result = intLiteral1.getValue() >> intLiteral1.getValue();
-                }else if(operator.equals(ShiftExp.Op.USHR)){
+                } else if (operator.equals(ShiftExp.Op.USHR)) {
                     result = intLiteral1.getValue() >>> intLiteral1.getValue();
                 }
                 return Value.makeConstant(result);
