@@ -33,6 +33,9 @@ import pascal.taie.language.type.PrimitiveType;
 import pascal.taie.language.type.Type;
 import pascal.taie.util.AnalysisException;
 
+import java.util.List;
+import java.util.Optional;
+
 public class ConstantPropagation extends
         AbstractDataflowAnalysis<Stmt, CPFact> {
 
@@ -51,11 +54,15 @@ public class ConstantPropagation extends
     public CPFact newBoundaryFact(CFG<Stmt> cfg) {
         // TODO - finish me
         Stmt entryStmt = cfg.getEntry();
-        LValue entryLValue = entryStmt.getDef().get();
-        Var entryVar = (Var) entryLValue;
         CPFact cpFact = new CPFact();
-        Value NACValue = Value.getNAC();
-        cpFact.update(entryVar, NACValue);
+        Optional<LValue>  entryLValue = entryStmt.getDef();
+        if(entryLValue.isPresent()){
+            LValue lValue = entryLValue.get();
+            Var entryVar = (Var) lValue;
+            Value NACValue = Value.getNAC();
+            cpFact.update(entryVar, NACValue);
+        }
+
 
         return cpFact;
     }
@@ -110,7 +117,30 @@ public class ConstantPropagation extends
     @Override
     public boolean transferNode(Stmt stmt, CPFact in, CPFact out) {
         // TODO - finish me
-        return false;
+        CPFact newOutFact = out.copy();
+
+        List<RValue> uses = stmt.getUses();
+        Var defLValue = null;
+
+        Optional<LValue> def = stmt.getDef();
+        if(def.isPresent()){
+            defLValue = (Var) def.get();
+            for (RValue use:uses) {
+                Value value = evaluate(use, in);
+                newOutFact.update((Var) defLValue, value);
+            }
+        }
+
+//        newOutFact.remove(defLValue);
+
+
+
+        if(newOutFact.equals(out)){
+            return false;
+        }
+
+
+        return true;
     }
 
     /**

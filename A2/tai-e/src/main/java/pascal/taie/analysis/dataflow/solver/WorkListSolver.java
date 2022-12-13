@@ -57,7 +57,7 @@ class WorkListSolver<Node, Fact> extends Solver<Node, Fact> {
             CPFact inFact = null;
             for (Node precursor : precursors) {
                 CPFact preOutFact = (CPFact) result.getOutFact(precursor);
-                if (inFact.equals(null)) {
+                if (inFact == null) {
                     inFact = preOutFact;
                 } else {
                     analysis.meetInto((Fact) inFact, (Fact) preOutFact);
